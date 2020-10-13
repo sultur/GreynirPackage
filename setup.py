@@ -37,7 +37,8 @@
     and build the required CFFI Python wrapper via eparser_build.py.
     The same applies to bin.cpp -> bin.*.so and bin_build.py.
 
-    Note that installing under PyPy >= 3.6 is supported.
+    Note that installing under PyPy >= 3.6 is supported (and recommended
+    for best performance).
 
 """
 
@@ -116,7 +117,7 @@ setup(
     ],
     keywords=["nlp", "parser", "icelandic"],
     setup_requires=["cffi>=1.13.0"],
-    install_requires=["cffi>=1.13.0", "tokenizer>=2.3.1"],
+    install_requires=["cffi>=1.13.0", "tokenizer>=2.4.0", "typing_extensions"],
     cffi_modules=[
         "src/reynir/eparser_build.py:ffibuilder",
         "src/reynir/bin_build.py:ffibuilder"
