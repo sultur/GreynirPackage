@@ -95,7 +95,7 @@ from collections import defaultdict
 from tokenizer.definitions import BIN_Tuple
 
 from .grammar import Grammar, Production
-from .fastparser import Node, ParseForestNavigator
+from .fastparser import Node, ParseError, ParseForestNavigator
 from .settings import Preferences, NounPreferences
 from .verbframe import VerbFrame
 from .binparser import BIN_Token, BIN_Terminal
@@ -513,14 +513,18 @@ class ParseForestReducer:
                 v = NULL_SC
             if "banned" in v:
                 print("FOUND A BANNED THING", w._nonterminal)
-            if w._nonterminal and self._banned_nonterminals and w._nonterminal.name in self._banned_nonterminals:
+            if (
+                w._nonterminal
+                and self._banned_nonterminals
+                and w._nonterminal.name in self._banned_nonterminals
+            ):
                 print("!" * 500)
                 print("THIS IS BANNED")
                 print("!" * 500)
                 print("TYPE OF v", type(v))
                 v["banned"] = True
                 v["sc"] -= 9001
-                print("V:",v)
+                print("V:", v)
             # Memoize the result for this (node, current_key) combination
             visited[(w, current_key)] = v
             w.score = v["sc"]
@@ -559,6 +563,7 @@ class Reducer:
     ) -> None:
         self._grammar = grammar
         self._banned_nonterminals = banned_nonterminals
+        print("REDUCER BANNED NONTERMINALS", self._banned_nonterminals)
 
     def _find_options(
         self, forest: Node, finals: FinalsDict, tokens: TokensDict
@@ -836,15 +841,14 @@ class Reducer:
         if forest is None:
             return None, 0
         scores = self._calc_terminal_scores(forest)
-        print("SCORES:", scores)
         # Third pass: navigate the tree bottom-up, eliminating lower-rated
         # options (subtrees) in favor of higher rated ones
         score = self._reduce(forest, scores)
-        print("REDUCED:", score)
+        if "banned" in score:
+            raise ParseError("Banned score")
         return forest, score["sc"]
 
     def go(self, forest: Optional[Node]) -> Optional[Node]:
         """Return only the reduced forest, without its score"""
-        print("REDUCING TREE")
         w, _ = self.go_with_score(forest)
         return w
